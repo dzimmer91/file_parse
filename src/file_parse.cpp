@@ -3,36 +3,7 @@
 #include<iostream>
 #include<fstream>
 #include<string>
-class Parser
-{
-
-  public:
-    Parser();
-    Parser(char*);
-    Parser(int, char, char*, char**);
-    ~Parser();
-    void dumpfile(); 
-    void setDel(char );
-    void setCommentDel(char);
-    void setVarsPerLine(int* );
-    bool setFileLocation(char* );
-    void setPassedVar(char**);
-    char **getline();
-    char *getdel();
-    char **stripunalmemstr(char *, int *);
-    char **stripmemstr(char *, int *);
-    bool getfileopen();
-    int getnumlines();
-  private:
-    bool debug;
-    int numVars;
-    bool fileOpen, commentflag;
-    char delimiter;
-    char commentDelimter;
-    char *fileLocation;
-    char **passedVar;
-    std::ifstream file;    
-};
+#include"file_parse.h"
 
 
 Parser::Parser()
@@ -51,7 +22,7 @@ Parser::Parser(char *fileloc)
   if(fileloc!=NULL)
   {
     int fileloclength=0;
-    fileLocation = new char [fileloclength=std::char_traits<char>::length(fileloc)];
+    fileLocation = new char [fileloclength=std::char_traits<char>::length(fileloc)+1];
 //    strcpy(fileLocaton, fileloc);
     std::char_traits<char>::copy(fileLocation, fileloc, fileloclength);
     file.open (fileLocation, std::ifstream::in);
@@ -370,4 +341,324 @@ Parser::~Parser()
   }
 
 }
+struct Misheader *Parser::readvis()
+{
+  debug = false;
 
+  Parser::numVars=7;
+
+  Misheader *FirstFileHead, *FirstFileCurrent;
+  FirstFileHead = new Misheader;
+  FirstFileHead->next = NULL;
+
+  bool first = true;
+
+
+  char **test;
+  while ((test = Parser::getline())!=NULL)
+  {
+    if(debug) std::cout << "test[0]=" << test[0] << std::endl;
+    if(strcmp(test[0],"Mission")==0)
+    {
+      for(int i=0;i<Parser::numVars;i++)
+      {
+        if(debug) std::cout << "removing mission header" << std::endl;
+        delete test[i];
+      }
+      delete test;
+      continue;
+    }
+
+
+    if(!first)
+    {
+       if(debug) std::cout << "not first" << std::endl;
+       FirstFileCurrent = FirstFileHead;
+       while(FirstFileCurrent!=NULL)
+       {
+         if(strcmp(FirstFileCurrent->misname,test[0])==0)
+         {
+            if(debug) std::cout << "found Mission" << std::endl;
+            break;
+         }
+         FirstFileCurrent = FirstFileCurrent->next;
+       }
+       if(FirstFileCurrent!=NULL) 
+       {
+          if(debug) std::cout << "FirstFileCurrent!=NULL" << std::endl;
+          FirstFileHead->data->next = new Misdata;
+          FirstFileHead->data = FirstFileHead->data->next;
+          FirstFileHead->data->next = NULL;
+          FirstFileHead->data->data = test;
+          FirstFileCurrent->data->station = test[1];
+          FirstFileCurrent->data->aos = test[3];
+          FirstFileCurrent->data->los = test[4];
+       }else
+       {
+          if(debug) std::cout << "FirstFileCurrent==NULL" << std::endl;
+          FirstFileCurrent = FirstFileHead;
+          while(FirstFileCurrent->next != NULL) FirstFileCurrent = FirstFileCurrent->next;
+          FirstFileCurrent->next = new Misheader;
+          FirstFileCurrent = FirstFileCurrent->next;
+          FirstFileCurrent->next = NULL;
+
+          FirstFileCurrent->data = new Misdata;
+          FirstFileCurrent->data->next = NULL;
+          FirstFileCurrent->data->data = test;
+          strcpy(FirstFileCurrent->misname, test[0]);
+          FirstFileCurrent->data->data = test;
+          FirstFileCurrent->data->station = test[1];
+          FirstFileCurrent->data->aos = test[3];
+          FirstFileCurrent->data->los = test[4];
+          FirstFileCurrent->datahead = FirstFileCurrent->data;
+       }
+
+    }else
+    {
+       if(debug) std::cout << "first" << std::endl;
+       first = false;
+       strcpy(FirstFileHead->misname, test[0]);
+       FirstFileHead->data = new Misdata;
+       FirstFileHead->data->next = NULL;
+       FirstFileHead->data->data = test;
+       FirstFileHead->data->station = test[1];
+       FirstFileHead->data->aos = test[3];
+       FirstFileHead->data->los = test[4];
+       FirstFileHead->datahead = FirstFileHead->data;
+
+    }
+
+
+  }
+  FirstFileCurrent = FirstFileHead;
+  while(FirstFileCurrent != NULL ) 
+  {
+
+
+     Misdata *tmpcur = FirstFileCurrent->datahead;
+     while(tmpcur != NULL)
+     {
+        for(int i=0; i< strlen(tmpcur->station);i++) tmpcur->station[i] = toupper(tmpcur->station[i]);
+        tmpcur->aostm.tm_isdst=1;
+        tmpcur->lostm.tm_isdst=1;
+        tmpcur->changed = false;
+        strptime(tmpcur->aos, "%m/%d/%Y %H:%M:%S", &tmpcur->aostm);
+        strptime(tmpcur->los, "%m/%d/%Y %H:%M:%S", &tmpcur->lostm);
+        tmpcur->aos_t = mktime(&tmpcur->aostm);
+        tmpcur->los_t = mktime(&tmpcur->lostm);
+
+        tmpcur = tmpcur->next;
+     }
+
+     FirstFileCurrent = FirstFileCurrent->next;
+
+  }
+
+  FirstFileCurrent = FirstFileHead;
+  while(FirstFileCurrent != NULL ) 
+  {
+
+     int staNum=1;
+     Misdata *tmpcur = FirstFileCurrent->datahead;
+     while(tmpcur != NULL)
+     {
+       Misdata *tmpcursec = FirstFileCurrent->datahead;
+       if(tmpcur->stanum == 0)
+       {
+          while(tmpcursec != NULL)
+          {
+             if(strcmp(tmpcursec->station,tmpcur->station)==0)
+             tmpcursec->stanum=staNum;
+             tmpcursec = tmpcursec->next;
+          }
+          ++staNum;
+        } 
+        tmpcur = tmpcur->next;
+     }
+     FirstFileCurrent = FirstFileCurrent->next;
+
+  }
+
+  return FirstFileHead;
+
+}
+
+
+struct Misheader *Parser::readsch()
+{
+  debug = false;
+
+  Parser::numVars=12;
+
+  Misheader *FirstFileHead, *FirstFileCurrent;
+  FirstFileHead = new Misheader;
+  FirstFileHead->next = NULL;
+
+  bool first = true;
+
+
+  char **test;
+  while ((test = Parser::getline())!=NULL)
+  {
+    if(debug) std::cout << "test[0]=" << test[0] << std::endl;
+    if(strcmp(test[0],"Mission")==0)
+    {
+      for(int i=0;i<Parser::numVars;i++)
+      {
+        if(debug) std::cout << "removing mission header" << std::endl;
+        delete test[i];
+      }
+      delete test;
+      continue;
+    }
+
+
+    if(!first)
+    {
+       if(debug) std::cout << "not first" << std::endl;
+       FirstFileCurrent = FirstFileHead;
+       while(FirstFileCurrent!=NULL)
+       {
+         if(strcmp(FirstFileCurrent->misname,test[0])==0)
+         {
+            if(debug) std::cout << "found Mission" << std::endl;
+            break;
+         }
+         FirstFileCurrent = FirstFileCurrent->next;
+       }
+       if(FirstFileCurrent!=NULL) 
+       {
+          if(debug) std::cout << "FirstFileCurrent!=NULL" << std::endl;
+          FirstFileHead->data->next = new Misdata;
+          FirstFileHead->data = FirstFileHead->data->next;
+          FirstFileHead->data->next = NULL;
+          FirstFileHead->data->data = test;
+          FirstFileCurrent->data->station = test[1];
+          FirstFileCurrent->data->aos = test[4];
+          FirstFileCurrent->data->los = test[5];
+       }else
+       {
+          if(debug) std::cout << "FirstFileCurrent==NULL" << std::endl;
+          FirstFileCurrent = FirstFileHead;
+          while(FirstFileCurrent->next != NULL) FirstFileCurrent = FirstFileCurrent->next;
+          FirstFileCurrent->next = new Misheader;
+          FirstFileCurrent = FirstFileCurrent->next;
+          FirstFileCurrent->next = NULL;
+
+          FirstFileCurrent->data = new Misdata;
+          FirstFileCurrent->data->next = NULL;
+          FirstFileCurrent->data->data = test;
+          strcpy(FirstFileCurrent->misname, test[0]);
+          FirstFileCurrent->data->data = test;
+          FirstFileCurrent->data->station = test[1];
+          FirstFileCurrent->data->aos = test[4];
+          FirstFileCurrent->data->los = test[5];
+          FirstFileCurrent->datahead = FirstFileCurrent->data;
+       }
+
+    }else
+    {
+       if(debug) std::cout << "first" << std::endl;
+       first = false;
+       strcpy(FirstFileHead->misname, test[0]);
+       FirstFileHead->data = new Misdata;
+       FirstFileHead->data->next = NULL;
+       FirstFileHead->data->data = test;
+       FirstFileHead->data->station = test[1];
+       FirstFileHead->data->aos = test[4];
+       FirstFileHead->data->los = test[5];
+       FirstFileHead->datahead = FirstFileHead->data;
+
+    }
+
+
+  }
+  FirstFileCurrent = FirstFileHead;
+  while(FirstFileCurrent != NULL ) 
+  {
+
+
+     Misdata *tmpcur = FirstFileCurrent->datahead;
+     while(tmpcur != NULL)
+     {
+        tmpcur->stanum=0;
+        tmpcur->aostm.tm_isdst=1;
+        tmpcur->lostm.tm_isdst=1;
+        tmpcur->changed = false;
+        strptime(tmpcur->aos, "%m/%d/%Y %H:%M:%S", &tmpcur->aostm);
+        strptime(tmpcur->los, "%m/%d/%Y %H:%M:%S", &tmpcur->lostm);
+        tmpcur->aos_t = mktime(&tmpcur->aostm);
+        tmpcur->los_t = mktime(&tmpcur->lostm);
+        tmpcur = tmpcur->next;
+     }
+
+     FirstFileCurrent = FirstFileCurrent->next;
+
+  }
+
+  return FirstFileHead;
+
+}
+
+
+Misdata *Parser::Misdata_remove(Misheader *head, Misdata *delinput)
+{
+
+     Misdata *preinput;
+     bool resethead = false;
+     if(delinput != head->datahead)
+     {
+        preinput = head->datahead;
+        while(preinput->next != delinput && preinput->next != NULL) preinput = preinput->next;
+        
+     }else
+     {
+
+        resethead = true;
+     }
+
+     Misdata *tmpcur = delinput;
+     char **tmpdata = tmpcur->data;
+
+     if(!resethead)  preinput->next = tmpcur->next;
+     else  preinput = head->datahead = tmpcur->next;
+
+     delete tmpcur;
+     for(int i=0; i<Parser::numVars;i++) delete tmpdata[i];
+     delete tmpdata;
+
+     return preinput;
+
+}
+
+
+
+
+void Parser::MisHeaderCleanup(Misheader *delinput)
+{
+
+  Misheader *FirstFileHead, *FirstFileCurrent;
+
+
+  FirstFileCurrent = delinput;
+  while(FirstFileCurrent != NULL ) 
+  {
+
+     Misdata *tmpcur = FirstFileCurrent->datahead;
+     while(tmpcur != NULL)
+     {
+
+        char **tmpdata = tmpcur->data;
+        Misdata *tmphead = tmpcur;
+        tmpcur = tmpcur->next;
+        delete tmphead;
+        for(int i=0; i<Parser::numVars;i++) delete tmpdata[i];
+        delete tmpdata;
+     }
+     Misheader *tmpheader = FirstFileCurrent;
+     FirstFileCurrent = FirstFileCurrent->next;
+     delete tmpheader;
+
+  }
+
+}
