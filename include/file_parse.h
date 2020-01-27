@@ -41,29 +41,27 @@ class Parser
     Parser(char*);
     Parser(int, char, char*, char**);
     ~Parser();
-    void dumpfile(); 
+    void dumpfile();
     void setDel(char );
     void setCommentDel(char);
     void setVarsPerLine(int* );
     bool setFileLocation(char* );
     void setPassedVar(char**);
     char **getline();
+    char *getline_nodel();
+
     char *getdel();
     char **stripunalmemstr(char *, int *);
     char **stripmemstr(char *, int *);
     bool getfileopen();
     int getnumlines();
+    int getnumdelcount();
 
-//**********************************************************************
-//TODO create new class for reading mission data into LL;
     Misheader *readvis();
     Misheader *readsch();
     Misdata *Misdata_remove(Misheader *head, Misdata *delinput);
     void MisHeaderCleanup(Misheader *);
-//**********************************************************************
     bool debug ;
-	
-	
   private:
    // bool debug;
     int numVars;
@@ -72,7 +70,7 @@ class Parser
     char commentDelimter;
     char *fileLocation;
     char **passedVar;
-    std::ifstream file;    
+    std::ifstream file;
 };
 
 #endif
