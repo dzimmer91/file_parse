@@ -7,6 +7,9 @@
 #include<string.h>
 
 using namespace std;
+
+#ifdef __NPAS_FILE_READING__
+
     struct Misdata
     {
         char
@@ -29,6 +32,8 @@ using namespace std;
         Misdata *data, *datahead;
         Misheader *next;
     };
+
+#endif
 
 class Parser
 {
@@ -57,13 +62,21 @@ class Parser
     int getnumlines();
     int getnumdelcount();
 
+    //rewind to top of file and clear any flags;
+    void rewind_file();
+
     Misheader *readvis();
     Misheader *readsch();
     Misdata *Misdata_remove(Misheader *head, Misdata *delinput);
     void MisHeaderCleanup(Misheader *);
     bool debug ;
+
   private:
-   // bool debug;
+    //functions
+    bool check_fileopen();
+
+    //vars
+    //bool debug;
     int numVars;
     bool fileOpen, commentflag;
     char delimiter;

@@ -1,7 +1,7 @@
 
 CXX	:= c++
-CXXFLAGS := -g
-    
+CXXFLAGS := -g -Iinclude
+
 OBJECTS	:= file_parse.o libfile_parse.a #main.o
 
 all: parse.o libfile_parse.a
@@ -18,4 +18,3 @@ libfile_parse.a:
 clean:
 	rm src/*.o
 	rm lib/*.a
-

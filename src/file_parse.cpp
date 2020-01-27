@@ -3,13 +3,46 @@
 #include<iostream>
 #include<fstream>
 #include<string>
-#include"file_parse.h"
+
+//define this to read NPAS mission / vis file;
 #define __NPAS_FILE_READING__
+
+#include"file_parse.h"
+
+//check if file is open and if not open file;
+bool Parser::check_fileopen()
+{
+  if(file.is_open()){
+    return true;
+  }
+  else{
+    file.open (fileLocation, std::ifstream::in);
+    if(file.is_open())
+    {
+      fileOpen=true;
+      return true;
+    }else
+    {
+      fileOpen=false;
+      return false;
+    }
+  }
+}
+//rewind to top of file;
+void Parser::rewind_file()
+{
+  if(file.is_open()){
+    //clear any file flags
+    file.clear();
+    //rewind to top of file;
+    file.seekg(0);
+  }
+}
 
 
 Parser::Parser()
 {
-//setup vars if none are passed in//
+  //setup vars if none are passed in//
   numVars=0;
   debug=false;
   fileOpen=false;
@@ -48,38 +81,17 @@ int Parser::getnumlines()
 
   int numlines=0, missioncount=0;
   std::string line;
-  if(file.is_open());
-  else
-  {
-    file.open (fileLocation, std::ifstream::in);
-    if(file.is_open())
-    {
-      fileOpen=true;
-    }else
-    {
-      fileOpen=false;
 
-    }
+  if(check_fileopen() == false){
+    return -1;
   }
 
-if(debug)std::cout << "parsefileopen=" << file.is_open() << " pasefileloc=" << fileLocation << "\n";
+  if(debug)std::cout << "parsefileopen=" << file.is_open() << " pasefileloc=" << fileLocation << "\n";
 
+  //find number of lines in file;
   while(std::getline(file, line)) ++numlines;
-  file.close();
 
-  if(file.is_open());
-  else
-  {
-    file.open (fileLocation, std::ifstream::in);
-    if(file.is_open())
-    {
-      fileOpen=true;
-    }else
-    {
-      fileOpen=false;
-
-    }
-  }
+  rewind_file();
 
   return numlines;
 }
@@ -89,18 +101,9 @@ int Parser::getnumdelcount()
 
   int numvars=0, missioncount=0;
   std::string line;
-  if(file.is_open());
-  else
-  {
-    file.open (fileLocation, std::ifstream::in);
-    if(file.is_open())
-    {
-      fileOpen=true;
-    }else
-    {
-      fileOpen=false;
 
-    }
+  if(check_fileopen() == false){
+    return -1;
   }
 
   std::getline(file, line);
@@ -113,21 +116,8 @@ int Parser::getnumdelcount()
       ++numvars;
     }
   }
-
-  file.close();
-
-  if(file.is_open());
-  else
-  {
-    file.open (fileLocation, std::ifstream::in);
-    if(file.is_open())
-    {
-      fileOpen=true;
-    }else
-    {
-      fileOpen=false;
-    }
-  }
+  //rewind to top of file;
+  rewind_file();
 
   return numvars;
 }
@@ -135,9 +125,8 @@ int Parser::getnumdelcount()
 char *Parser::getline_nodel()
 {
   static bool first=false;
-  if(debug)  std::cout << "parsefileopen=" << file.is_open() << " pasefileloc=" << fileLocation << "\n";
 
-    if(fileOpen){
+  if(fileOpen){
       char *item;
       std::string tmpitem;
 
@@ -148,7 +137,9 @@ char *Parser::getline_nodel()
 
       return item;
 
-    }
+  }else{
+    return NULL;
+  }
 }
 
 bool Parser::getfileopen()
@@ -164,15 +155,8 @@ bool Parser::setFileLocation(char *fileloc)
     int fileloclength=0;
     fileLocation = new char [fileloclength=std::char_traits<char>::length(fileloc)];
     std::char_traits<char>::copy(fileLocation, fileloc, fileloclength);
-    file.open (fileLocation, std::ifstream::in);
-    if(file.is_open())
-    {
-      fileOpen=true;
-    }else
-    {
-      fileOpen=false;
 
-    }
+    check_fileopen();
 
   }
   return fileOpen;
@@ -188,12 +172,7 @@ void Parser::dumpfile()
           std::cout << c;
           c = file.get();
        }
-    }else
-    {
-
-
     }
-
 }
 void Parser::setDel(char del)
 {
@@ -344,14 +323,7 @@ if(debug)  std::cout << "parsefileopen=" << file.is_open() << " pasefileloc=" <<
       if(fileLocation==NULL) return NULL;
       else
       {
-        file.open (fileLocation, std::ifstream::in);
-        if(file.is_open())
-        {
-          fileOpen=true;
-        }else
-        {
-          fileOpen=false;
-        }
+        check_fileopen();
       }
     }
     if(first) return NULL;
@@ -382,14 +354,7 @@ char *Parser::getdel()
       if(fileLocation==NULL) return NULL;
       else
       {
-        file.open (fileLocation, std::ifstream::in);
-        if(file.is_open())
-        {
-          fileOpen=true;
-        }else
-        {
-          fileOpen=false;
-        }
+        check_fileopen();
       }
     }
     if(first) return NULL;
