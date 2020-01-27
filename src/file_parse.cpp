@@ -79,7 +79,7 @@ Parser::Parser(char *fileloc)
 int Parser::getnumlines()
 {
 
-  int numlines=0, missioncount=0;
+  int numlines=0;
   std::string line;
 
   if(check_fileopen() == false){
@@ -99,7 +99,7 @@ int Parser::getnumlines()
 int Parser::getnumdelcount()
 {
 
-  int numvars=0, missioncount=0;
+  int numvars=0;
   std::string line;
 
   if(check_fileopen() == false){
@@ -124,7 +124,6 @@ int Parser::getnumdelcount()
 
 char *Parser::getline_nodel()
 {
-  static bool first=false;
 
   if(fileOpen){
       char *item;
@@ -235,7 +234,7 @@ char **Parser::stripmemstr(char *inputstr, int *numofvars)
   }
 
   item = new char *[inputdelnum];
-  int copylength=0,itemnum=0;
+  int itemnum=0;
   for(int i=0; i<inputstrlen;i++)
   {
 
