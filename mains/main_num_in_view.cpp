@@ -117,8 +117,9 @@ int main(int argc, char **argv)
   FILE *outputfile;
   outputfile = fopen(argv[2], "w");
 
-  if(outputfile == NULL){
+  if(outputfile == NULL || end_los <= 0 || start_aos <= 0){
   //cleanup
+    fclose(outputfile);
     delete in_file;
     curpointer = headptr;
     while(curpointer != NULL){
