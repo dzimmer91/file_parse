@@ -65,10 +65,12 @@ class Parser
     //rewind to top of file and clear any flags;
     void rewind_file();
 
+#ifdef __NPAS_FILE_READING__
     Misheader *readvis();
     Misheader *readsch();
     Misdata *Misdata_remove(Misheader *head, Misdata *delinput);
     void MisHeaderCleanup(Misheader *);
+#endif
     bool debug ;
 
   private:

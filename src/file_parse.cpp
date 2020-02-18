@@ -66,9 +66,7 @@ Parser::Parser(char *fileloc)
     }else
     {
       fileOpen=false;
-
     }
-
   }
   commentflag=false;
   delimiter='\0';
@@ -111,8 +109,7 @@ int Parser::getnumdelcount()
   //gets the number of vars to return and changes the delimiter to NULL
   for(int i=0;i<inputstrlen;i++)
   {
-    if(line[i]==delimiter)
-    {
+    if(line[i]==delimiter){
       ++numvars;
     }
   }
@@ -135,7 +132,6 @@ char *Parser::getline_nodel()
       strcpy(&item[0],tmpitem.c_str());
 
       return item;
-
   }else{
     return NULL;
   }
@@ -310,13 +306,8 @@ if(debug)  std::cout << "parsefileopen=" << file.is_open() << " pasefileloc=" <<
             item[i][length]='\0';
             oldpos=pos+1;
         }
-
       }
-
-
       return item;
-
-
     }else
     {
       if(fileLocation==NULL) return NULL;
@@ -328,8 +319,6 @@ if(debug)  std::cout << "parsefileopen=" << file.is_open() << " pasefileloc=" <<
     if(first) return NULL;
     else first=true;
   }
-
-
 }
 
 char *Parser::getdel()
