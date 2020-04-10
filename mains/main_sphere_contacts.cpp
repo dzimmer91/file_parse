@@ -120,7 +120,7 @@ int main(int argc, char **argv)
   struct ptrlist{
     lldata *data;
     ptrlist *next;
-  }
+  };
 
   ptrlist *bestlist, *besthead;
   besthead = bestlist = NULL;
@@ -134,8 +134,8 @@ int main(int argc, char **argv)
       if(curpointer->station == tmpptr->station){
         if(curpointer->los_t < tmpptr->aos_t && curpointer->aos_t < tmpptr->los_t ) {
           char tmpdate[80], curdate[80];
-          strftime(curdate,80,"%m/%d/%G %H:%M:%S",curpointer->aos_tm);
-          strftime(tmpdate,80,"%m/%d/%G %H:%M:%S",tmpptr->aos_tm);
+          strftime(curdate,80,"%m/%d/%G %H:%M:%S",&curpointer->aos_tm);
+          strftime(tmpdate,80,"%m/%d/%G %H:%M:%S",&tmpptr->aos_tm);
 
           cout << "\ncuraos=" << curdate << " duration=" << curpointer->duration;
           cout << "\ntmpaos=" << tmpdate << " duration=" << tmpptr->duration;
