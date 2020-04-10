@@ -16,6 +16,9 @@ deps/file_parse.o: src/file_parse.cpp include/file_parse.h
 bin/num_in_view: mains/main_num_in_view.cpp include/file_parse.h lib/libfile_parse.a
 		$(CXX) $(INCLUDES) $(CXXFLAGS) mains/main_num_in_view.cpp -o bin/num_in_view lib/libfile_parse.a
 
+bin/sphere_contact: mains/main_sphere_contacts.cpp include/file_parse.h lib/libfile_parse.a
+				$(CXX) $(INCLUDES) $(CXXFLAGS) mains/main_sphere_contacts.cpp -o bin/sphere_contact lib/libfile_parse.a
+
 #main.o: main.cpp
 #	$(CXX) $(INCLUDES) $(CXXFLAGS) -c main.cpp -o main.o
 
