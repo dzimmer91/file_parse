@@ -4,7 +4,7 @@ CXXFLAGS := -g -Iinclude
 
 OBJECTS	:= file_parse.o libfile_parse.a #main.o
 
-all: deps/file_parse.o bin/num_in_view
+all: deps/file_parse.o bin/num_in_view bin/sphere_contact
 
 #my_program: $(OBJECTS)
 #	$(CXX) $(OBJECTS) -o my_program

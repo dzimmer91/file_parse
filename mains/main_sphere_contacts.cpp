@@ -117,7 +117,7 @@ int main(int argc, char **argv)
 
   for(time_t curtime=start_aos;curtime<end_los;curtime++){// = curtime + 60){
     lldata *rtnptr;
-    currentcount = count_sats(curpointer, curtime, rtnptr);
+    currentcount = 1;
     averagecount = ((double)(currentcount + averagecount) /2);
     if ( mincount > currentcount) mincount = currentcount;
     if ( maxcount < currentcount) maxcount = currentcount;
