@@ -43,7 +43,7 @@ int count_sats(lldata *dataptr, time_t time, lldata *rtnptr)
 int main(int argc, char **argv)
 {
   if(argc != 3){
-    cout << "\nError: Invalid arguments\n";
+    cout << "\nError: Invalid arguments:\n    sphere_contact input_file output_file\n";
     return -1;
   }
   Parser *in_file;

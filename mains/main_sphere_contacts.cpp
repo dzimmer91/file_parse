@@ -26,7 +26,7 @@ struct lldata{
 int main(int argc, char **argv)
 {
   if(argc != 3){
-    cout << "\nError: Invalid arguments\n";
+    cout << "\nError: Invalid arguments:\n    sphere_contact input_file output_file\n";
     return -1;
   }
   Parser *in_file;
@@ -40,6 +40,7 @@ int main(int argc, char **argv)
 
   int numlines = in_file->getnumlines();
   int numperline = in_file->getnumdelcount();
+
   time_t start_aos=4000000000, end_los=0;
   ++numperline;
   in_file->setVarsPerLine(&numperline);
@@ -74,6 +75,7 @@ int main(int argc, char **argv)
     strptime(tmpdata[2], "%m/%d/%Y %H:%M:%S", &curpointer->los_tm);
     curpointer->aos_t = mktime(&curpointer->aos_tm);
     curpointer->los_t = mktime(&curpointer->los_tm);
+    curpointer->duration = curpointer->los_t - curpointer->aos_t;
     if (curpointer->los_t > end_los) end_los = curpointer->los_t;
     if (curpointer->aos_t < start_aos) start_aos = curpointer->aos_t;
 
@@ -115,33 +117,34 @@ int main(int argc, char **argv)
   fprintf(outputfile,"AOS,LOS,count\n");
   curpointer = headptr;
 
-  for(time_t curtime=start_aos;curtime<end_los;curtime++){// = curtime + 60){
-    lldata *rtnptr;
-    currentcount = 1;
-    averagecount = ((double)(currentcount + averagecount) /2);
-    if ( mincount > currentcount) mincount = currentcount;
-    if ( maxcount < currentcount) maxcount = currentcount;
-    if ( currentcount != prevouscount ) {
-      ++totalchanges;
-      tm *timeinfo, *preinfo;
-      char predate[80], curdate[80];
-      timeinfo =  localtime(&curtime);
-      strftime(curdate,80,"%m/%d/%G %H:%M:%S",timeinfo);
-
-      preinfo =  localtime(&prevoustime);
-      strftime(predate,80,"%m/%d/%G %H:%M:%S",preinfo);
-      fprintf(outputfile,"%s,%s,%d\n",predate,curdate,prevouscount);
-      //cout << "\nTime=" << predate << " -> " << curdate<< " Day=" << ((curtime - start_aos) / 86400) << " count=" << currentcount;
-      prevoustime = curtime;
-      prevouscount = currentcount;
-
-    }
-
+  struct ptrlist{
+    lldata *data;
+    ptrlist *next;
   }
-    cout << "\ntotalchanges =" << totalchanges;
-    cout << "\nMin count =" << mincount;
-    cout << "\nMax count =" << maxcount;
-    cout << "\nAverage count =" << averagecount;
+
+  ptrlist *bestlist, *besthead;
+  besthead = bestlist = NULL;
+  while (curpointer->next != NULL){// = curtime + 60){
+    lldata *tmpptr = headptr;
+
+    while (tmpptr->next != NULL){
+      while ( curpointer->aos_t > tmpptr->aos_t && tmpptr->next != NULL) tmpptr = tmpptr->next;
+      if(curpointer->los_t > tmpptr->aos_t ) break;
+      
+      if(curpointer->station == tmpptr->station){
+        if(curpointer->los_t < tmpptr->aos_t && curpointer->aos_t < tmpptr->los_t ) {
+          char tmpdate[80], curdate[80];
+          strftime(curdate,80,"%m/%d/%G %H:%M:%S",curpointer->aos_tm);
+          strftime(tmpdate,80,"%m/%d/%G %H:%M:%S",tmpptr->aos_tm);
+
+          cout << "\ncuraos=" << curdate << " duration=" << curpointer->duration;
+          cout << "\ntmpaos=" << tmpdate << " duration=" << tmpptr->duration;
+        }
+      }
+      tmpptr = tmpptr->next;
+    }
+    curpointer = curpointer->next;
+  }
 
 
   //cleanup
