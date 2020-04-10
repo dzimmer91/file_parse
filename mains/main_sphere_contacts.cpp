@@ -2,7 +2,7 @@
 
 #include<fstream>
 #include<string.h>
-
+#include<stdlib.h>
 #include"file_parse.h"
 
 using namespace std;
@@ -25,7 +25,10 @@ struct lldata{
 
 int main(int argc, char **argv)
 {
-  if(argc != 3){
+  int debug=0;
+  if(argc == 4){
+    debug = atoi(argv[3]);
+  }else if(argc != 3){
     cout << "\nError: Invalid arguments:\n    sphere_contact input_file output_file\n";
     return -1;
   }
@@ -76,6 +79,7 @@ int main(int argc, char **argv)
     curpointer->aos_t = mktime(&curpointer->aos_tm);
     curpointer->los_t = mktime(&curpointer->los_tm);
     curpointer->duration = curpointer->los_t - curpointer->aos_t;
+    if(debug)  cout << "\nstation=" << tmpdata[0] << " " << tmpdata[1] << " " << tmpdata[2];
     if (curpointer->los_t > end_los) end_los = curpointer->los_t;
     if (curpointer->aos_t < start_aos) start_aos = curpointer->aos_t;
 
@@ -115,39 +119,108 @@ int main(int argc, char **argv)
     cout << "\nError: unable to open output file";
     return -1;
   }
-  fprintf(outputfile,"AOS,LOS,count\n");
   curpointer = headptr;
 
+  char tmpdate[80], tmpedate[80], curdate[80], curedate[80];
+  if(debug){
+    while ( curpointer != NULL){
+      strftime(curdate,80,"%m/%d/%G %H:%M:%S",&curpointer->aos_tm);
+      strftime(curedate,80,"%m/%d/%G %H:%M:%S",&curpointer->los_tm);
+      cout << "\ncurpointer station=" << curpointer->station;
+      cout << "   curaos=" << curdate << "->" << curedate << " duration=" << curpointer->duration;
+      curpointer = curpointer->next;
+    }
+  }
+  curpointer = headptr;
   struct ptrlist{
     lldata *data;
     ptrlist *next;
   };
 
-  ptrlist *bestlist, *besthead;
+  ptrlist *bestlist, *bestlistend, *besthead;
   besthead = bestlist = NULL;
   cout << "\nBest list generation";
   while (curpointer->next != NULL){// = curtime + 60){
     lldata *tmpptr = headptr;
+    cout << "\n\ncurpointer station=" << curpointer->station << "-";
+    strftime(curdate,80,"%m/%d/%G %H:%M:%S",&curpointer->aos_tm);
+    strftime(curedate,80,"%m/%d/%G %H:%M:%S",&curpointer->los_tm);
+    cout << "   curaos=" << curdate << "->" << curedate << " duration=" << curpointer->duration;
 
-    while (tmpptr->next != NULL){
-      while ( curpointer->aos_t > tmpptr->aos_t && tmpptr->next != NULL) tmpptr = tmpptr->next;
-      if(curpointer->los_t > tmpptr->aos_t ) break;
+    while (tmpptr != NULL ){
+       // cout << "\ntmp station=" << tmpptr->station;
+       // cout << " aos=" << tmpptr->aos_t << "->" << tmpptr->los_t;
+      //  cout << "\ncuraos=" << curpointer->aos_t << "->" << curpointer->los_t;
+      cout << "\ntmpptr while loop";
+      cout << "   tmp station=" << tmpptr->station << "-";
+      strftime(tmpdate,80,"%m/%d/%G %H:%M:%S",&tmpptr->aos_tm);
+      strftime(tmpedate,80,"%m/%d/%G %H:%M:%S",&tmpptr->los_tm);
+      cout << "  tmpaos=" << tmpdate << "->" << tmpedate << " duration=" << tmpptr->duration;
+      if( curpointer->los_t < tmpptr->aos_t){
+        cout << "\naos passed current LOS";
+        cout << "\ntmp station=" << tmpptr->station << "-";
+        strftime(tmpdate,80,"%m/%d/%G %H:%M:%S",&tmpptr->aos_tm);
+        strftime(tmpedate,80,"%m/%d/%G %H:%M:%S",&tmpptr->los_tm);
+        cout << "  tmpaos=" << tmpdate << "->" << tmpedate << " duration=" << tmpptr->duration;
+        bestlist = bestlist->next;
+        break;
+      }
 
-      if(curpointer->station == tmpptr->station){
-        if(curpointer->los_t < tmpptr->aos_t && curpointer->aos_t < tmpptr->los_t ) {
-          char tmpdate[80], curdate[80];
-          strftime(curdate,80,"%m/%d/%G %H:%M:%S",&curpointer->aos_tm);
+
+      if (curpointer->aos_t < tmpptr->los_t ){
+        if(strcmp (curpointer->station, tmpptr->station)==0){
+          cout << "\ntmp station=" << tmpptr->station << "-";
           strftime(tmpdate,80,"%m/%d/%G %H:%M:%S",&tmpptr->aos_tm);
+          strftime(tmpedate,80,"%m/%d/%G %H:%M:%S",&tmpptr->los_tm);
+          cout << "  tmpaos=" << tmpdate << "->" << tmpedate << " duration=" << tmpptr->duration;
+//        cout << "\ncuraos=" << curpointer->aos_t << "->" << curpointer->los_t;
+//        cout << "\ntmpaos=" << tmpptr->aos_t << "->" << tmpptr->los_t;
+          if(curpointer->los_t > tmpptr->aos_t && curpointer->aos_t < tmpptr->los_t ) {
+           cout << "\nchecking duration";
+           strftime(curdate,80,"%m/%d/%G %H:%M:%S",&curpointer->aos_tm);
+           cout << "\ncuraos=" << curdate << " duration=" << curpointer->duration;
+           if(bestlist != NULL){
+             if(bestlistend == NULL){
+               bestlist->next = new ptrlist;
+               bestlistend = bestlist->next;
+               bestlistend->data = tmpptr;
+               bestlistend->next = NULL;
+             }else{
+               
+               if(tmpptr->duration > bestlistend->data->duration){
+                  bestlistend->data = tmpptr;
+               }
+             }
+           }else{
+             bestlist = new ptrlist;
+             bestlist->next = NULL;
+             besthead = bestlist;
+             bestlistend = bestlist;
+             bestlistend->data = tmpptr;
+           }
+           
 
-          cout << "\ncuraos=" << curdate << " duration=" << curpointer->duration;
-          cout << "\ntmpaos=" << tmpdate << " duration=" << tmpptr->duration;
+          }
+        }else{
+          cout << "\nstation != station";
         }
+      }else{
+        cout << "\ntmpptr los < cur aos";
       }
       tmpptr = tmpptr->next;
     }
     curpointer = curpointer->next;
   }
-
+  bestlist = besthead;
+  while(bestlist != NULL){
+      strftime(curdate,80,"%m/%d/%G %H:%M:%S",&bestlist->data->aos_tm);
+      strftime(curedate,80,"%m/%d/%G %H:%M:%S",&bestlist->data->los_tm);
+      cout << "\n station=" << bestlist->data->station;
+      cout << "   curaos=" << curdate << "->" << curedate << " duration=" << bestlist->data->duration;
+    fprintf(outputfile,"%s,%s,%s\n",bestlist->data->station, curdate, curedate);  
+    bestlist = bestlist->next;
+    
+  }
 
   //cleanup
   fclose(outputfile);

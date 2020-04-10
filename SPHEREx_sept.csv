@@ -1,4 +1,4 @@
-Station,Start Time (UTCG),Stop Time (UTCG),Duration (sec),Beam Tilt (deg)
+station,aos,los,duration,angle
 Svalbard,09/23/2023 20:35:04,09/23/2023 20:37:11,126.47,-20
 Svalbard,09/23/2023 20:35:04,09/23/2023 20:37:10,125.568,-10
 Punta Arenas,09/23/2023 21:14:19,09/23/2023 21:15:15,55.678,20
