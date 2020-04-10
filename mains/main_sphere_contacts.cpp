@@ -10,7 +10,7 @@ using namespace std;
 struct lldata{
   char
     //satellite[40],
-    station[20];
+    station[40];
   tm
     aos_tm,
     los_tm;
@@ -112,6 +112,7 @@ int main(int argc, char **argv)
       delete curpointer;
       curpointer = tmp;
     }
+    cout << "\nError: unable to open output file";
     return -1;
   }
   fprintf(outputfile,"AOS,LOS,count\n");
@@ -124,13 +125,14 @@ int main(int argc, char **argv)
 
   ptrlist *bestlist, *besthead;
   besthead = bestlist = NULL;
+  cout << "\nBest list generation";
   while (curpointer->next != NULL){// = curtime + 60){
     lldata *tmpptr = headptr;
 
     while (tmpptr->next != NULL){
       while ( curpointer->aos_t > tmpptr->aos_t && tmpptr->next != NULL) tmpptr = tmpptr->next;
       if(curpointer->los_t > tmpptr->aos_t ) break;
-      
+
       if(curpointer->station == tmpptr->station){
         if(curpointer->los_t < tmpptr->aos_t && curpointer->aos_t < tmpptr->los_t ) {
           char tmpdate[80], curdate[80];
