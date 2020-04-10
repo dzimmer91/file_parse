@@ -138,67 +138,73 @@ int main(int argc, char **argv)
   };
 
   ptrlist *bestlist, *bestlistend, *besthead;
-  besthead = bestlist = NULL;
-  cout << "\nBest list generation";
+  besthead = bestlist = bestlistend = NULL;
+  if(debug)cout << "\nBest list generation";
   while (curpointer->next != NULL){// = curtime + 60){
     lldata *tmpptr = headptr;
-    cout << "\n\ncurpointer station=" << curpointer->station << "-";
-    strftime(curdate,80,"%m/%d/%G %H:%M:%S",&curpointer->aos_tm);
-    strftime(curedate,80,"%m/%d/%G %H:%M:%S",&curpointer->los_tm);
-    cout << "   curaos=" << curdate << "->" << curedate << " duration=" << curpointer->duration;
-
+    if(debug){
+      cout << "\n\ncurpointer station=" << curpointer->station << "-";
+      strftime(curdate,80,"%m/%d/%G %H:%M:%S",&curpointer->aos_tm);
+      strftime(curedate,80,"%m/%d/%G %H:%M:%S",&curpointer->los_tm);
+      cout << "   curaos=" << curdate << "->" << curedate << " duration=" << curpointer->duration;
+    }
     while (tmpptr != NULL ){
        // cout << "\ntmp station=" << tmpptr->station;
        // cout << " aos=" << tmpptr->aos_t << "->" << tmpptr->los_t;
       //  cout << "\ncuraos=" << curpointer->aos_t << "->" << curpointer->los_t;
-      cout << "\ntmpptr while loop";
-      cout << "   tmp station=" << tmpptr->station << "-";
-      strftime(tmpdate,80,"%m/%d/%G %H:%M:%S",&tmpptr->aos_tm);
-      strftime(tmpedate,80,"%m/%d/%G %H:%M:%S",&tmpptr->los_tm);
-      cout << "  tmpaos=" << tmpdate << "->" << tmpedate << " duration=" << tmpptr->duration;
-      if( curpointer->los_t < tmpptr->aos_t){
-        cout << "\naos passed current LOS";
-        cout << "\ntmp station=" << tmpptr->station << "-";
+      if(debug){
+        cout << "\ntmpptr while loop";
+        cout << "   tmp station=" << tmpptr->station << "-";
         strftime(tmpdate,80,"%m/%d/%G %H:%M:%S",&tmpptr->aos_tm);
         strftime(tmpedate,80,"%m/%d/%G %H:%M:%S",&tmpptr->los_tm);
         cout << "  tmpaos=" << tmpdate << "->" << tmpedate << " duration=" << tmpptr->duration;
-        bestlist = bestlist->next;
+      }
+      if( curpointer->los_t < tmpptr->aos_t){
+        if(debug){
+          cout << "\naos passed current LOS";
+          cout << "\ntmp station=" << tmpptr->station << "-";
+          strftime(tmpdate,80,"%m/%d/%G %H:%M:%S",&tmpptr->aos_tm);
+          strftime(tmpedate,80,"%m/%d/%G %H:%M:%S",&tmpptr->los_tm);
+          cout << "  tmpaos=" << tmpdate << "->" << tmpedate << " duration=" << tmpptr->duration;
+        }
+        if(bestlist->next != NULL) bestlist = bestlist->next;
+        bestlistend = bestlistend->next;
         break;
       }
 
 
       if (curpointer->aos_t < tmpptr->los_t ){
         if(strcmp (curpointer->station, tmpptr->station)==0){
-          cout << "\ntmp station=" << tmpptr->station << "-";
-          strftime(tmpdate,80,"%m/%d/%G %H:%M:%S",&tmpptr->aos_tm);
-          strftime(tmpedate,80,"%m/%d/%G %H:%M:%S",&tmpptr->los_tm);
-          cout << "  tmpaos=" << tmpdate << "->" << tmpedate << " duration=" << tmpptr->duration;
-//        cout << "\ncuraos=" << curpointer->aos_t << "->" << curpointer->los_t;
-//        cout << "\ntmpaos=" << tmpptr->aos_t << "->" << tmpptr->los_t;
+          if(debug){
+            cout << "\ntmp station=" << tmpptr->station << "-";
+            strftime(tmpdate,80,"%m/%d/%G %H:%M:%S",&tmpptr->aos_tm);
+            strftime(tmpedate,80,"%m/%d/%G %H:%M:%S",&tmpptr->los_tm);
+            cout << "  tmpaos=" << tmpdate << "->" << tmpedate << " duration=" << tmpptr->duration;
+          }
           if(curpointer->los_t > tmpptr->aos_t && curpointer->aos_t < tmpptr->los_t ) {
-           cout << "\nchecking duration";
-           strftime(curdate,80,"%m/%d/%G %H:%M:%S",&curpointer->aos_tm);
-           cout << "\ncuraos=" << curdate << " duration=" << curpointer->duration;
+            if(debug){
+              cout << "\nchecking duration";
+              strftime(curdate,80,"%m/%d/%G %H:%M:%S",&curpointer->aos_tm);
+              cout << "\ncuraos=" << curdate << " duration=" << curpointer->duration;
+            }
            if(bestlist != NULL){
              if(bestlistend == NULL){
                bestlist->next = new ptrlist;
                bestlistend = bestlist->next;
                bestlistend->data = tmpptr;
                bestlistend->next = NULL;
-             }else{
-               
-               if(tmpptr->duration > bestlistend->data->duration){
+              }else{
+                if(tmpptr->duration > bestlistend->data->duration){
                   bestlistend->data = tmpptr;
-               }
-             }
-           }else{
-             bestlist = new ptrlist;
-             bestlist->next = NULL;
-             besthead = bestlist;
-             bestlistend = bestlist;
-             bestlistend->data = tmpptr;
-           }
-           
+                }
+              }
+            }else{
+              bestlist = new ptrlist;
+              bestlist->next = NULL;
+              bestlistend = besthead = bestlist;
+              bestlistend->data = tmpptr;
+            }
+
 
           }
         }else{
@@ -217,9 +223,9 @@ int main(int argc, char **argv)
       strftime(curedate,80,"%m/%d/%G %H:%M:%S",&bestlist->data->los_tm);
       cout << "\n station=" << bestlist->data->station;
       cout << "   curaos=" << curdate << "->" << curedate << " duration=" << bestlist->data->duration;
-    fprintf(outputfile,"%s,%s,%s\n",bestlist->data->station, curdate, curedate);  
+    fprintf(outputfile,"%s,%s,%s\n",bestlist->data->station, curdate, curedate);
     bestlist = bestlist->next;
-    
+
   }
 
   //cleanup
