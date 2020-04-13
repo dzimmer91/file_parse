@@ -49,6 +49,11 @@ int main(int argc, char **argv)
   Parser *in_file;
   if(argv[1] != NULL){
     in_file = new Parser(argv[1]);
+    if(in_file->getfileopen() == false){
+      cout << "\nError: unable to open file\n";
+      delete in_file;
+      return -1;
+    }
   }else{
     cout << "\nError: Unable to open file\n";
     return -1;
