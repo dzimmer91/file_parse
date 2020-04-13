@@ -23,6 +23,6 @@ bin/sphere_contact: mains/main_sphere_contacts.cpp include/file_parse.h lib/libf
 #	$(CXX) $(INCLUDES) $(CXXFLAGS) -c main.cpp -o main.o
 
 clean:
-	rm deps/*.o
-	rm lib/*.a
-	rm bin/*
+	rm -rf deps/*.o
+	rm -rf lib/*.a
+	rm -rf bin/*
