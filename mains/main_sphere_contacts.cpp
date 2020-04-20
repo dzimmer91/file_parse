@@ -172,22 +172,22 @@ int main(int argc, char **argv)
 
 
     if(stmprawtime > curpointer->aos_t ){
-      if (debug > 2) cout << "\n1->EDT ";
-      if (debug > 2) cout << " start=" << stmprawtime << " aos=" << curpointer->aos_t ;
+      if (debug > 3) cout << "\n1->EDT ";
+      if (debug > 3) cout << " start=" << stmprawtime << " aos=" << curpointer->aos_t ;
       curpointer->aos_tm.tm_isdst=-1;
       curpointer->los_tm.tm_isdst=-1;
       curpointer->daylightsaving = 1;
     }
     else if(stmprawtime < curpointer->aos_t && etmprawtime > curpointer->aos_t){
-      if (debug > 2) cout <<"\nEST ";
-      if (debug > 2) cout << " start=" << stmprawtime << " end=" << etmprawtime << " aos=" << curpointer->aos_t ;\
+      if (debug > 3) cout <<"\nEST ";
+      if (debug > 3) cout << " start=" << stmprawtime << " end=" << etmprawtime << " aos=" << curpointer->aos_t ;\
       curpointer->aos_tm.tm_isdst=-1;
       curpointer->los_tm.tm_isdst=-1;
       curpointer->daylightsaving = 0;
 
     }else{
-      if (debug > 2) cout << "\n2->EDT ";
-      if (debug > 2) cout << " start=" << stmprawtime << " end=" << etmprawtime << " aos=" << curpointer->aos_t ;
+      if (debug > 3) cout << "\n2->EDT ";
+      if (debug > 3) cout << " start=" << stmprawtime << " end=" << etmprawtime << " aos=" << curpointer->aos_t ;
       curpointer->aos_tm.tm_isdst=-1;
       curpointer->los_tm.tm_isdst=-1;
       curpointer->daylightsaving = 1;
@@ -269,9 +269,6 @@ int main(int argc, char **argv)
       cout << "   DST=" << curpointer->aos_tm.tm_isdst << " curdst=" << curpointer->daylightsaving << " curaos=" << curdate << "->" << curedate << " duration=" << curpointer->duration << flush;
     }
     while (tmpptr != NULL ){
-       // cout << "\ntmp station=" << tmpptr->station;
-       // cout << " aos=" << tmpptr->aos_t << "->" << tmpptr->los_t;
-      //  cout << "\ncuraos=" << curpointer->aos_t << "->" << curpointer->los_t;
       if(debug>2){
         cout << "\ntmpptr while loop";
         cout << "   tmp station=" << tmpptr->station << "-";
@@ -282,35 +279,41 @@ int main(int argc, char **argv)
       if( curpointer->los_t < tmpptr->aos_t){
         if(debug>2){
           cout << "\naos passed current LOS";
-          cout << "\ntmp station=" << tmpptr->station << "-";
+          cout << "  tmp station=" << tmpptr->station << "-";
           strftime(tmpdate,80,"%m/%d/%G %H:%M:%S",&tmpptr->aos_tm);
           strftime(tmpedate,80,"%m/%d/%G %H:%M:%S",&tmpptr->los_tm);
           cout << "  tmpaos=" << tmpdate << "->" << tmpedate << " duration=" << tmpptr->duration<< flush;
         }
         if(bestlist->next != NULL){
-           if(debug>2)cout << "\nbestlist->next != NULL" << flush;
+           if(debug>2)cout << "\nbestlist->next != NULL Going to next node" << flush;
            bestlist = bestlist->next;
          }
-        if(debug>2) cout << "\nsetting bestlistend to next"<< flush;
+        if(debug > 2) cout << "\nsetting bestlistend to next"<< flush;
+        bool ptrreset = false;
         if(bestlistend == NULL){
-          if(debug>2) cout << "\n### Error bestlistend == NULL" << flush;
+          if(debug > 2) cout << "\n### bestlistend == NULL" << flush;
           if(bestlist != NULL){
+            if(bestlist->next == NULL) cout << "\n### bestlist->next == NULL";
             if(bestlistend == NULL){
+              ptrreset = true;
               bestlist->next = new ptrlist;
-              bestlistend = bestlist->next;
-              bestlistend->data = curpointer;
-              bestlistend->next = NULL;
-              if(debug>2) cout << "\ncreating new bestlist->next adding to bestlist station=" << tmpptr->station << "-";
-              strftime(tmpdate,80,"%m/%d/%G %H:%M:%S",&curpointer->aos_tm);
-              strftime(tmpedate,80,"%m/%d/%G %H:%M:%S",&curpointer->los_tm);
-              if(debug>2) cout << "  tmpaos=" << tmpdate << "->" << tmpedate << " duration=" << tmpptr->duration << flush;
+              bestlist = bestlist->next;
+              bestlistend = bestlist;
+              bestlist->data = curpointer;
+              bestlist->next = NULL;
+              if(debug>2) cout << "\n### creating new bestlist->next adding to bestlist station=" << bestlist->data->station << "-";
+              strftime(tmpdate,80,"%m/%d/%G %H:%M:%S",&bestlist->data->aos_tm);
+              strftime(tmpedate,80,"%m/%d/%G %H:%M:%S",&bestlist->data->los_tm);
+              if(debug>2) cout << "  tmpaos=" << tmpdate << "->" << tmpedate << " duration=" << bestlist->data->duration << flush;
+            }else{
+              if(debug>2) cout << "\nWarning: ### bestlistend != NULL" << tmpptr->station << "-";
             }
           }else{
             bestlist = new ptrlist;
             bestlist->next = NULL;
             bestlistend = besthead = bestlist;
             bestlistend->data = tmpptr;
-                 if(debug>2) cout << "\ncreating new head bestlist station=" << tmpptr->station << "-";
+                 if(debug>2) cout << "\n### creating new head bestlist station=" << tmpptr->station << "-";
                  strftime(tmpdate,80,"%m/%d/%G %H:%M:%S",&tmpptr->aos_tm);
                  strftime(tmpedate,80,"%m/%d/%G %H:%M:%S",&tmpptr->los_tm);
                  if(debug>2) cout << "  tmpaos=" << tmpdate << "->" << tmpedate << " duration=" << tmpptr->duration << flush;
@@ -318,7 +321,9 @@ int main(int argc, char **argv)
           //return -1;
         }
         bestlistend = bestlistend->next;
-        while(curpointer != NULL && curpointer->next != tmpptr) curpointer = curpointer->next;
+        if(ptrreset == false)
+          while(curpointer != NULL && curpointer->next != tmpptr) curpointer = curpointer->next;
+
         break;
       }
 
@@ -346,13 +351,13 @@ int main(int argc, char **argv)
                 bestlistend = bestlist->next;
                 bestlistend->data = longestduration;
                 bestlistend->next = NULL;
-                if(debug>2) cout << "\ncreating new bestlist->next adding to bestlist station=" << tmpptr->station << "-";
+                if(debug>2) cout << "\n### creating new bestlist->next adding to bestlist station=" << tmpptr->station << "-";
                 strftime(tmpdate,80,"%m/%d/%G %H:%M:%S",&tmpptr->aos_tm);
                 strftime(tmpedate,80,"%m/%d/%G %H:%M:%S",&tmpptr->los_tm);
                 if(debug>2) cout << "  tmpaos=" << tmpdate << "->" << tmpedate << " duration=" << tmpptr->duration << flush;
               }else{
                 if(tmpptr->duration > bestlistend->data->duration){
-                   if(debug>2) cout << "\nchanging to bestlist station=" << tmpptr->station << "-";
+                   if(debug>2) cout << "\n### changing to bestlist station=" << tmpptr->station << "-";
                    strftime(tmpdate,80,"%m/%d/%G %H:%M:%S",&tmpptr->aos_tm);
                    strftime(tmpedate,80,"%m/%d/%G %H:%M:%S",&tmpptr->los_tm);
                    if(debug>2) cout << "  tmpaos=" << tmpdate << "->" << tmpedate << " duration=" << tmpptr->duration << flush;
@@ -364,7 +369,7 @@ int main(int argc, char **argv)
               bestlist->next = NULL;
               bestlistend = besthead = bestlist;
               bestlistend->data = tmpptr;
-              if(debug>2) cout << "\ncreating new head bestlist station=" << tmpptr->station << "-";
+              if(debug>2) cout << "\n### creating new head bestlist station=" << tmpptr->station << "-";
               strftime(tmpdate,80,"%m/%d/%G %H:%M:%S",&tmpptr->aos_tm);
               strftime(tmpedate,80,"%m/%d/%G %H:%M:%S",&tmpptr->los_tm);
               if(debug>2) cout << "  tmpaos=" << tmpdate << "->" << tmpedate << " duration=" << tmpptr->duration << flush;
@@ -391,7 +396,7 @@ int main(int argc, char **argv)
   while(bestlist != NULL){
       strftime(curdate,80,"%m/%d/%G %H:%M:%S",&bestlist->data->aos_tm);
       strftime(curedate,80,"%m/%d/%G %H:%M:%S",&bestlist->data->los_tm);
-      if(debug>2) cout << "\n station=" << bestlist->data->station;
+      if(debug>2) cout << "\nblist station=" << bestlist->data->station;
       if(debug>2) cout << "   curaos=" << curdate << "->" << curedate << " duration=" << bestlist->data->duration;
       fprintf(outputfile,"%s,%s,%s\n",bestlist->data->station, curdate, curedate);
       bestlist = bestlist->next;
